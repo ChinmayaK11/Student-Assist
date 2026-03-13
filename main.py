@@ -202,7 +202,8 @@ class ViewStudentScreen(MDScreen):
                 spacing=10
             )
 
-            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}%"
+            status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
+            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}% | {status}"
             label = MDLabel(text=text, size_hint_x=0.8)
 
             delete_btn = MDRaisedButton(
@@ -287,11 +288,13 @@ class SearchStudentScreen(MDScreen):
         for key, student in data.items():
             if student['roll'] == roll:
                 marks = student.get('marks', [])
+                status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
                 self.result_label.text = (
                     f"Name: {student['name']}\n"
                     f"Roll: {student['roll']}\n"
                     f"Marks: {marks}\n"
-                    f"Percentage: {student['percentage']}%"
+                    f"Percentage: {student['percentage']}%\n"
+                    f"Status: {status}"
                 )
                 found = True
                 break
