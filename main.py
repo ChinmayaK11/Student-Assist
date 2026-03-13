@@ -39,9 +39,16 @@ class HomeScreen(MDScreen):
             on_release=self.go_to_view
         )
 
+        search_btn = MDRaisedButton(
+            text="Search Student",
+            pos_hint={"center_x": 0.5},
+            on_release=self.go_to_search
+        )
+
         layout.add_widget(title)
         layout.add_widget(add_btn)
         layout.add_widget(view_btn)
+        layout.add_widget(search_btn)
 
         self.add_widget(layout)
 
@@ -50,6 +57,9 @@ class HomeScreen(MDScreen):
 
     def go_to_view(self, instance):
         self.manager.current = "view"
+
+    def go_to_search(self, instance):
+        self.manager.current = "search"
 
 
 # ---------------- ADD STUDENT SCREEN ----------------
@@ -116,7 +126,6 @@ class AddStudentScreen(MDScreen):
 
         print("Student saved to Firebase")
 
-        # Clear fields after submit
         self.name_input.text = ""
         self.roll_input.text = ""
         self.m1_input.text = ""
@@ -185,11 +194,110 @@ class ViewStudentScreen(MDScreen):
             )
             return
 
-        for _, student in data.items():
-            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}%"
-            self.list_layout.add_widget(
-                MDLabel(text=text, size_hint_y=None, height=30)
+        for key, student in data.items():
+            row = MDBoxLayout(
+                orientation="horizontal",
+                size_hint_y=None,
+                height=40,
+                spacing=10
             )
+
+            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}%"
+            label = MDLabel(text=text, size_hint_x=0.8)
+
+            delete_btn = MDRaisedButton(
+                text="Delete",
+                size_hint_x=0.2,
+                on_release=lambda inst, k=key: self.delete_student(k)
+            )
+
+            row.add_widget(label)
+            row.add_widget(delete_btn)
+            self.list_layout.add_widget(row)
+
+    def delete_student(self, key):
+        ref.child(key).delete()
+        print(f"Student {key} deleted")
+        self.load_data()
+
+    def go_back(self, instance):
+        self.manager.current = "home"
+
+
+# ---------------- SEARCH STUDENT SCREEN ----------------
+class SearchStudentScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = MDBoxLayout(
+            orientation="vertical",
+            padding=20,
+            spacing=15
+        )
+
+        title = MDLabel(
+            text="Search Student",
+            halign="center",
+            font_style="H5"
+        )
+
+        self.search_input = MDTextField(hint_text="Enter Roll Number")
+
+        search_btn = MDRaisedButton(
+            text="Search",
+            pos_hint={"center_x": 0.5},
+            on_release=self.search_student
+        )
+
+        self.result_label = MDLabel(
+            text="",
+            halign="center",
+            size_hint_y=None,
+            height=200
+        )
+
+        back_btn = MDRaisedButton(
+            text="Back",
+            pos_hint={"center_x": 0.5},
+            on_release=self.go_back
+        )
+
+        layout.add_widget(title)
+        layout.add_widget(self.search_input)
+        layout.add_widget(search_btn)
+        layout.add_widget(self.result_label)
+        layout.add_widget(back_btn)
+
+        self.add_widget(layout)
+
+    def search_student(self, instance):
+        roll = self.search_input.text.strip()
+
+        if not roll:
+            self.result_label.text = "Please enter a roll number!"
+            return
+
+        data = ref.get()
+
+        if not data:
+            self.result_label.text = "No students found in database."
+            return
+
+        found = False
+        for key, student in data.items():
+            if student['roll'] == roll:
+                marks = student.get('marks', [])
+                self.result_label.text = (
+                    f"Name: {student['name']}\n"
+                    f"Roll: {student['roll']}\n"
+                    f"Marks: {marks}\n"
+                    f"Percentage: {student['percentage']}%"
+                )
+                found = True
+                break
+
+        if not found:
+            self.result_label.text = f"No student found with Roll No: {roll}"
 
     def go_back(self, instance):
         self.manager.current = "home"
@@ -202,8 +310,8 @@ class StudentAssistApp(MDApp):
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(AddStudentScreen(name="add"))
         sm.add_widget(ViewStudentScreen(name="view"))
+        sm.add_widget(SearchStudentScreen(name="search"))
         return sm
 
 
 StudentAssistApp().run()
-
