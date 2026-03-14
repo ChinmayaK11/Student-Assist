@@ -49,6 +49,12 @@ class HomeScreen(MDScreen):
             font_style="Subtitle1"
         )
 
+        self.pass_label = MDLabel(
+            text="✅ Passed: 0  |  ❌ Failed: 0",
+            halign="center",
+            font_style="Subtitle1"
+        )
+
         add_btn = MDRaisedButton(
             text="Add Student",
             pos_hint={"center_x": 0.5},
@@ -69,6 +75,7 @@ class HomeScreen(MDScreen):
 
         self.layout.add_widget(title)
         self.layout.add_widget(self.count_label)
+        self.layout.add_widget(self.pass_label)
         self.layout.add_widget(add_btn)
         self.layout.add_widget(view_btn)
         self.layout.add_widget(search_btn)
@@ -82,6 +89,13 @@ class HomeScreen(MDScreen):
         data = ref.get()
         count = len(data) if data else 0
         self.count_label.text = f"👨‍🎓 Total Students: {count}"
+
+        if data:
+            passed = sum(1 for s in data.values() if s.get('percentage', 0) >= 40)
+            failed = count - passed
+        else:
+            passed, failed = 0, 0
+        self.pass_label.text = f"✅ Passed: {passed}  |  ❌ Failed: {failed}"
 
     def go_to_add(self, instance):
         self.manager.current = "add"
