@@ -100,10 +100,19 @@ class HomeScreen(MDScreen):
             on_release=self.go_to_search
         )
 
+        dark_btn = MDRaisedButton(
+            text="🌙  Dark Mode",
+            pos_hint={"center_x": 0.5},
+            md_bg_color=(0.15, 0.15, 0.15, 1),
+            size_hint_x=0.8,
+            on_release=self.toggle_dark_mode
+        )
+
         content.add_widget(stats_card)
         content.add_widget(add_btn)
         content.add_widget(view_btn)
         content.add_widget(search_btn)
+        content.add_widget(dark_btn)
 
         layout.add_widget(toolbar)
         layout.add_widget(content)
@@ -112,6 +121,17 @@ class HomeScreen(MDScreen):
 
     def on_enter(self):
         self.update_count()
+
+    def toggle_dark_mode(self, instance):
+        app = MDApp.get_running_app()
+        if app.theme_cls.theme_style == "Light":
+            app.theme_cls.theme_style = "Dark"
+            instance.text = "☀️  Light Mode"
+            instance.md_bg_color = (0.3, 0.3, 0.3, 1)
+        else:
+            app.theme_cls.theme_style = "Light"
+            instance.text = "🌙  Dark Mode"
+            instance.md_bg_color = (0.15, 0.15, 0.15, 1)
 
     def update_count(self):
         data = ref.get()
