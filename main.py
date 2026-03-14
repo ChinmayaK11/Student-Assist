@@ -15,7 +15,7 @@ class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        layout = MDBoxLayout(
+        self.layout = MDBoxLayout(
             orientation="vertical",
             padding=40,
             spacing=20
@@ -25,6 +25,12 @@ class HomeScreen(MDScreen):
             text="StudentAssist",
             halign="center",
             font_style="H4"
+        )
+
+        self.count_label = MDLabel(
+            text="Total Students: Loading...",
+            halign="center",
+            font_style="Subtitle1"
         )
 
         add_btn = MDRaisedButton(
@@ -45,12 +51,21 @@ class HomeScreen(MDScreen):
             on_release=self.go_to_search
         )
 
-        layout.add_widget(title)
-        layout.add_widget(add_btn)
-        layout.add_widget(view_btn)
-        layout.add_widget(search_btn)
+        self.layout.add_widget(title)
+        self.layout.add_widget(self.count_label)
+        self.layout.add_widget(add_btn)
+        self.layout.add_widget(view_btn)
+        self.layout.add_widget(search_btn)
 
-        self.add_widget(layout)
+        self.add_widget(self.layout)
+
+    def on_enter(self):
+        self.update_count()
+
+    def update_count(self):
+        data = ref.get()
+        count = len(data) if data else 0
+        self.count_label.text = f"👨‍🎓 Total Students: {count}"
 
     def go_to_add(self, instance):
         self.manager.current = "add"
