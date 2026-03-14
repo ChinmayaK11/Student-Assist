@@ -10,6 +10,22 @@ from kivymd.uix.scrollview import MDScrollView
 from firebase_config import ref
 
 
+# ---------------- GRADE HELPER ----------------
+def get_grade(percentage):
+    if percentage >= 90:
+        return "A+"
+    elif percentage >= 80:
+        return "A"
+    elif percentage >= 70:
+        return "B"
+    elif percentage >= 60:
+        return "C"
+    elif percentage >= 40:
+        return "D"
+    else:
+        return "F"
+
+
 # ---------------- HOME SCREEN ----------------
 class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
@@ -218,7 +234,8 @@ class ViewStudentScreen(MDScreen):
             )
 
             status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
-            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}% | {status}"
+            grade = get_grade(student['percentage'])
+            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}% | Grade: {grade} | {status}"
             label = MDLabel(text=text, size_hint_x=0.8)
 
             delete_btn = MDRaisedButton(
@@ -304,11 +321,13 @@ class SearchStudentScreen(MDScreen):
             if student['roll'] == roll:
                 marks = student.get('marks', [])
                 status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
+                grade = get_grade(student['percentage'])
                 self.result_label.text = (
                     f"Name: {student['name']}\n"
                     f"Roll: {student['roll']}\n"
                     f"Marks: {marks}\n"
                     f"Percentage: {student['percentage']}%\n"
+                    f"Grade: {grade}\n"
                     f"Status: {status}"
                 )
                 found = True
