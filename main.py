@@ -3,9 +3,11 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.button import MDRaisedButton, MDFlatButton
 from kivymd.uix.label import MDLabel
 from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.card import MDCard
+from kivymd.uix.toolbar import MDTopAppBar
 
 from firebase_config import ref
 
@@ -31,22 +33,31 @@ class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.layout = MDBoxLayout(
-            orientation="vertical",
-            padding=40,
-            spacing=20
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="🎓 StudentAssist",
+            md_bg_color=(0.2, 0.4, 0.8, 1)
         )
 
-        title = MDLabel(
-            text="StudentAssist",
-            halign="center",
-            font_style="H4"
+        content = MDBoxLayout(orientation="vertical", padding=30, spacing=16)
+
+        stats_card = MDCard(
+            orientation="vertical",
+            padding=20,
+            spacing=10,
+            size_hint_y=None,
+            height=140,
+            md_bg_color=(0.95, 0.97, 1, 1),
+            radius=[12]
         )
 
         self.count_label = MDLabel(
-            text="Total Students: Loading...",
+            text="👨‍🎓 Total Students: ...",
             halign="center",
-            font_style="Subtitle1"
+            font_style="H6",
+            theme_text_color="Custom",
+            text_color=(0.2, 0.4, 0.8, 1)
         )
 
         self.pass_label = MDLabel(
@@ -61,33 +72,43 @@ class HomeScreen(MDScreen):
             font_style="Subtitle1"
         )
 
+        stats_card.add_widget(self.count_label)
+        stats_card.add_widget(self.pass_label)
+        stats_card.add_widget(self.avg_label)
+
         add_btn = MDRaisedButton(
-            text="Add Student",
+            text="➕  Add Student",
             pos_hint={"center_x": 0.5},
+            md_bg_color=(0.2, 0.7, 0.4, 1),
+            size_hint_x=0.8,
             on_release=self.go_to_add
         )
 
         view_btn = MDRaisedButton(
-            text="View Students",
+            text="📋  View Students",
             pos_hint={"center_x": 0.5},
+            md_bg_color=(0.2, 0.4, 0.8, 1),
+            size_hint_x=0.8,
             on_release=self.go_to_view
         )
 
         search_btn = MDRaisedButton(
-            text="Search Student",
+            text="🔍  Search Student",
             pos_hint={"center_x": 0.5},
+            md_bg_color=(0.6, 0.2, 0.8, 1),
+            size_hint_x=0.8,
             on_release=self.go_to_search
         )
 
-        self.layout.add_widget(title)
-        self.layout.add_widget(self.count_label)
-        self.layout.add_widget(self.pass_label)
-        self.layout.add_widget(self.avg_label)
-        self.layout.add_widget(add_btn)
-        self.layout.add_widget(view_btn)
-        self.layout.add_widget(search_btn)
+        content.add_widget(stats_card)
+        content.add_widget(add_btn)
+        content.add_widget(view_btn)
+        content.add_widget(search_btn)
 
-        self.add_widget(self.layout)
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
+
+        self.add_widget(layout)
 
     def on_enter(self):
         self.update_count()
@@ -103,6 +124,7 @@ class HomeScreen(MDScreen):
             avg = round(sum(s.get('percentage', 0) for s in data.values()) / count, 2)
         else:
             passed, failed, avg = 0, 0, 0
+
         self.pass_label.text = f"✅ Passed: {passed}  |  ❌ Failed: {failed}"
         self.avg_label.text = f"📊 Class Average: {avg}%"
 
@@ -121,43 +143,55 @@ class AddStudentScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        layout = MDBoxLayout(
-            orientation="vertical",
-            padding=20,
-            spacing=15
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="➕ Add Student",
+            md_bg_color=(0.2, 0.7, 0.4, 1)
         )
 
-        self.name_input = MDTextField(hint_text="Student Name")
-        self.roll_input = MDTextField(hint_text="Roll Number")
-        self.m1_input = MDTextField(hint_text="Marks 1")
-        self.m2_input = MDTextField(hint_text="Marks 2")
-        self.m3_input = MDTextField(hint_text="Marks 3")
+        content = MDBoxLayout(orientation="vertical", padding=30, spacing=14)
+
+        self.name_input = MDTextField(hint_text="Student Name", icon_right="account")
+        self.roll_input = MDTextField(hint_text="Roll Number", icon_right="identifier")
+        self.m1_input = MDTextField(hint_text="Marks - Subject 1", icon_right="numeric-1-circle", input_filter="int")
+        self.m2_input = MDTextField(hint_text="Marks - Subject 2", icon_right="numeric-2-circle", input_filter="int")
+        self.m3_input = MDTextField(hint_text="Marks - Subject 3", icon_right="numeric-3-circle", input_filter="int")
 
         submit_btn = MDRaisedButton(
-            text="Submit",
+            text="💾  Save Student",
             pos_hint={"center_x": 0.5},
+            md_bg_color=(0.2, 0.7, 0.4, 1),
+            size_hint_x=0.8,
             on_release=self.submit
         )
 
-        back_btn = MDRaisedButton(
-            text="Back",
+        back_btn = MDFlatButton(
+            text="⬅  Back",
             pos_hint={"center_x": 0.5},
             on_release=self.go_back
         )
 
-        layout.add_widget(self.name_input)
-        layout.add_widget(self.roll_input)
-        layout.add_widget(self.m1_input)
-        layout.add_widget(self.m2_input)
-        layout.add_widget(self.m3_input)
-        layout.add_widget(submit_btn)
-        layout.add_widget(back_btn)
+        content.add_widget(self.name_input)
+        content.add_widget(self.roll_input)
+        content.add_widget(self.m1_input)
+        content.add_widget(self.m2_input)
+        content.add_widget(self.m3_input)
+        content.add_widget(submit_btn)
+        content.add_widget(back_btn)
+
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
 
         self.add_widget(layout)
 
     def submit(self, instance):
-        name = self.name_input.text
-        roll = self.roll_input.text
+        name = self.name_input.text.strip()
+        roll = self.roll_input.text.strip()
+
+        if not name or not roll:
+            print("Name and Roll number are required!")
+            return
 
         try:
             marks = [
@@ -178,7 +212,7 @@ class AddStudentScreen(MDScreen):
             "percentage": percentage
         })
 
-        print("Student saved to Firebase")
+        print("Student saved to Firebase!")
 
         self.name_input.text = ""
         self.roll_input.text = ""
@@ -197,44 +231,38 @@ class ViewStudentScreen(MDScreen):
         self.build_ui()
 
     def build_ui(self):
-        main_layout = MDBoxLayout(
-            orientation="vertical",
-            padding=20,
-            spacing=10
+        main_layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="📋 Student Records",
+            md_bg_color=(0.2, 0.4, 0.8, 1)
         )
 
-        title = MDLabel(
-            text="Student Records",
-            halign="center",
-            font_style="H5"
-        )
+        content = MDBoxLayout(orientation="vertical", padding=20, spacing=10)
 
         self.scroll = MDScrollView()
-        self.list_layout = MDBoxLayout(
-            orientation="vertical",
-            spacing=10,
-            size_hint_y=None
-        )
+        self.list_layout = MDBoxLayout(orientation="vertical", spacing=10, size_hint_y=None)
         self.list_layout.bind(minimum_height=self.list_layout.setter("height"))
-
         self.scroll.add_widget(self.list_layout)
 
+        btn_row = MDBoxLayout(orientation="horizontal", size_hint_y=None, height=50, spacing=10)
+
         refresh_btn = MDRaisedButton(
-            text="Refresh",
-            pos_hint={"center_x": 0.5},
+            text="🔄 Refresh",
+            md_bg_color=(0.2, 0.4, 0.8, 1),
             on_release=self.load_data
         )
 
-        back_btn = MDRaisedButton(
-            text="Back",
-            pos_hint={"center_x": 0.5},
-            on_release=self.go_back
-        )
+        back_btn = MDFlatButton(text="⬅ Back", on_release=self.go_back)
 
-        main_layout.add_widget(title)
-        main_layout.add_widget(self.scroll)
-        main_layout.add_widget(refresh_btn)
-        main_layout.add_widget(back_btn)
+        btn_row.add_widget(refresh_btn)
+        btn_row.add_widget(back_btn)
+
+        content.add_widget(self.scroll)
+        content.add_widget(btn_row)
+
+        main_layout.add_widget(toolbar)
+        main_layout.add_widget(content)
 
         self.add_widget(main_layout)
 
@@ -243,33 +271,35 @@ class ViewStudentScreen(MDScreen):
         data = ref.get()
 
         if not data:
-            self.list_layout.add_widget(
-                MDLabel(text="No students found", halign="center")
-            )
+            self.list_layout.add_widget(MDLabel(text="No students found", halign="center"))
             return
 
         for key, student in data.items():
-            row = MDBoxLayout(
+            card = MDCard(
                 orientation="horizontal",
+                padding=12,
+                spacing=10,
                 size_hint_y=None,
-                height=40,
-                spacing=10
+                height=60,
+                md_bg_color=(0.95, 0.97, 1, 1),
+                radius=[8]
             )
 
-            status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
+            status = "✅" if student['percentage'] >= 40 else "❌"
             grade = get_grade(student['percentage'])
-            text = f"{student['name']} | Roll: {student['roll']} | {student['percentage']}% | Grade: {grade} | {status}"
-            label = MDLabel(text=text, size_hint_x=0.8)
+            text = f"{status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}"
+            label = MDLabel(text=text, size_hint_x=0.8, font_style="Body2")
 
             delete_btn = MDRaisedButton(
-                text="Delete",
+                text="🗑",
                 size_hint_x=0.2,
+                md_bg_color=(0.9, 0.2, 0.2, 1),
                 on_release=lambda inst, k=key: self.delete_student(k)
             )
 
-            row.add_widget(label)
-            row.add_widget(delete_btn)
-            self.list_layout.add_widget(row)
+            card.add_widget(label)
+            card.add_widget(delete_btn)
+            self.list_layout.add_widget(card)
 
     def delete_student(self, key):
         ref.child(key).delete()
@@ -285,44 +315,55 @@ class SearchStudentScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        layout = MDBoxLayout(
-            orientation="vertical",
-            padding=20,
-            spacing=15
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="🔍 Search Student",
+            md_bg_color=(0.6, 0.2, 0.8, 1)
         )
 
-        title = MDLabel(
-            text="Search Student",
-            halign="center",
-            font_style="H5"
-        )
+        content = MDBoxLayout(orientation="vertical", padding=30, spacing=16)
 
-        self.search_input = MDTextField(hint_text="Enter Roll Number")
+        self.search_input = MDTextField(hint_text="Enter Roll Number", icon_right="magnify")
 
         search_btn = MDRaisedButton(
-            text="Search",
+            text="🔍  Search",
             pos_hint={"center_x": 0.5},
+            md_bg_color=(0.6, 0.2, 0.8, 1),
+            size_hint_x=0.8,
             on_release=self.search_student
         )
 
-        self.result_label = MDLabel(
-            text="",
-            halign="center",
+        self.result_card = MDCard(
+            orientation="vertical",
+            padding=20,
             size_hint_y=None,
-            height=200
+            height=220,
+            md_bg_color=(0.95, 0.97, 1, 1),
+            radius=[12]
         )
 
-        back_btn = MDRaisedButton(
-            text="Back",
+        self.result_label = MDLabel(
+            text="Search results will appear here...",
+            halign="center",
+            font_style="Body1"
+        )
+
+        self.result_card.add_widget(self.result_label)
+
+        back_btn = MDFlatButton(
+            text="⬅  Back",
             pos_hint={"center_x": 0.5},
             on_release=self.go_back
         )
 
-        layout.add_widget(title)
-        layout.add_widget(self.search_input)
-        layout.add_widget(search_btn)
-        layout.add_widget(self.result_label)
-        layout.add_widget(back_btn)
+        content.add_widget(self.search_input)
+        content.add_widget(search_btn)
+        content.add_widget(self.result_card)
+        content.add_widget(back_btn)
+
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
 
         self.add_widget(layout)
 
@@ -330,7 +371,7 @@ class SearchStudentScreen(MDScreen):
         roll = self.search_input.text.strip()
 
         if not roll:
-            self.result_label.text = "Please enter a roll number!"
+            self.result_label.text = "⚠️ Please enter a roll number!"
             return
 
         data = ref.get()
@@ -346,18 +387,18 @@ class SearchStudentScreen(MDScreen):
                 status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
                 grade = get_grade(student['percentage'])
                 self.result_label.text = (
-                    f"Name: {student['name']}\n"
-                    f"Roll: {student['roll']}\n"
-                    f"Marks: {marks}\n"
-                    f"Percentage: {student['percentage']}%\n"
-                    f"Grade: {grade}\n"
+                    f"👤 Name: {student['name']}\n"
+                    f"🔢 Roll: {student['roll']}\n"
+                    f"📝 Marks: {marks}\n"
+                    f"📊 Percentage: {student['percentage']}%\n"
+                    f"🏅 Grade: {grade}\n"
                     f"Status: {status}"
                 )
                 found = True
                 break
 
         if not found:
-            self.result_label.text = f"No student found with Roll No: {roll}"
+            self.result_label.text = f"❌ No student found with Roll No: {roll}"
 
     def go_back(self, instance):
         self.manager.current = "home"
@@ -366,6 +407,8 @@ class SearchStudentScreen(MDScreen):
 # ---------------- APP ----------------
 class StudentAssistApp(MDApp):
     def build(self):
+        self.theme_cls.primary_palette = "Blue"
+        self.theme_cls.theme_style = "Light"
         sm = MDScreenManager()
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(AddStudentScreen(name="add"))
