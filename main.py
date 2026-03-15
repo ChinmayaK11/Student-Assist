@@ -285,9 +285,16 @@ class ViewStudentScreen(MDScreen):
             on_release=self.load_data
         )
 
+        self.sort_btn = MDRaisedButton(
+            text="⬆ Sort: High",
+            md_bg_color=(0.2, 0.6, 0.5, 1),
+            on_release=self.toggle_sort
+        )
+
         back_btn = MDFlatButton(text="⬅ Back", on_release=self.go_back)
 
         btn_row.add_widget(refresh_btn)
+        btn_row.add_widget(self.sort_btn)
         btn_row.add_widget(back_btn)
 
         content.add_widget(self.scroll)
@@ -297,6 +304,16 @@ class ViewStudentScreen(MDScreen):
         main_layout.add_widget(content)
 
         self.add_widget(main_layout)
+        self.sort_order = "high"
+
+    def toggle_sort(self, instance):
+        if self.sort_order == "high":
+            self.sort_order = "low"
+            self.sort_btn.text = "⬇ Sort: Low"
+        else:
+            self.sort_order = "high"
+            self.sort_btn.text = "⬆ Sort: High"
+        self.load_data()
 
     def load_data(self, instance=None):
         self.list_layout.clear_widgets()
@@ -306,7 +323,10 @@ class ViewStudentScreen(MDScreen):
             self.list_layout.add_widget(MDLabel(text="No students found", halign="center"))
             return
 
-        for key, student in data.items():
+        reverse = self.sort_order == "high"
+        sorted_students = sorted(data.items(), key=lambda x: x[1].get('percentage', 0), reverse=reverse)
+
+        for key, student in sorted_students:
             card = MDCard(
                 orientation="horizontal",
                 padding=12,
