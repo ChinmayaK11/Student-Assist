@@ -47,7 +47,7 @@ class HomeScreen(MDScreen):
             padding=20,
             spacing=10,
             size_hint_y=None,
-            height=140,
+            height=175,
             md_bg_color=(0.95, 0.97, 1, 1),
             radius=[12]
         )
@@ -72,9 +72,18 @@ class HomeScreen(MDScreen):
             font_style="Subtitle1"
         )
 
+        self.top_label = MDLabel(
+            text="🏆 Top Scorer: ...",
+            halign="center",
+            font_style="Subtitle1",
+            theme_text_color="Custom",
+            text_color=(0.8, 0.5, 0.0, 1)
+        )
+
         stats_card.add_widget(self.count_label)
         stats_card.add_widget(self.pass_label)
         stats_card.add_widget(self.avg_label)
+        stats_card.add_widget(self.top_label)
 
         add_btn = MDRaisedButton(
             text="➕  Add Student",
@@ -142,8 +151,11 @@ class HomeScreen(MDScreen):
             passed = sum(1 for s in data.values() if s.get('percentage', 0) >= 40)
             failed = count - passed
             avg = round(sum(s.get('percentage', 0) for s in data.values()) / count, 2)
+            top = max(data.values(), key=lambda s: s.get('percentage', 0))
+            self.top_label.text = f"🏆 Top Scorer: {top['name']} ({top['percentage']}%)"
         else:
             passed, failed, avg = 0, 0, 0
+            self.top_label.text = "🏆 Top Scorer: N/A"
 
         self.pass_label.text = f"✅ Passed: {passed}  |  ❌ Failed: {failed}"
         self.avg_label.text = f"📊 Class Average: {avg}%"
