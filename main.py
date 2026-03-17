@@ -1,5 +1,6 @@
 import csv
 import os
+from datetime import datetime
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -295,12 +296,14 @@ class AddStudentScreen(MDScreen):
         # All good — clear errors
         self.error_label.text = ""
         percentage = round((sum(marks) / 300) * 100, 2)
+        timestamp = datetime.now().strftime("%d %b %Y, %I:%M %p")
 
         ref.push({
             "name": name,
             "roll": roll,
             "marks": marks,
-            "percentage": percentage
+            "percentage": percentage,
+            "added_on": timestamp
         })
 
         self.success_label.text = f"✅ {name} saved successfully!"
@@ -560,13 +563,15 @@ class SearchStudentScreen(MDScreen):
                 marks = student.get('marks', [])
                 status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
                 grade = get_grade(student['percentage'])
+                added_on = student.get('added_on', 'N/A')
                 self.result_label.text = (
                     f"👤 Name: {student['name']}\n"
                     f"🔢 Roll: {student['roll']}\n"
                     f"📝 Marks: {marks}\n"
                     f"📊 Percentage: {student['percentage']}%\n"
                     f"🏅 Grade: {grade}\n"
-                    f"Status: {status}"
+                    f"Status: {status}\n"
+                    f"🕒 Added on: {added_on}"
                 )
                 found = True
                 break
