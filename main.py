@@ -97,7 +97,7 @@ class HomeScreen(MDScreen):
             on_release=self.go_to_add
         )
 
-        view_btn = MDRaisedButton(
+        self.view_btn = MDRaisedButton(
             text="📋  View Students",
             pos_hint={"center_x": 0.5},
             md_bg_color=(0.2, 0.4, 0.8, 1),
@@ -123,7 +123,7 @@ class HomeScreen(MDScreen):
 
         content.add_widget(stats_card)
         content.add_widget(add_btn)
-        content.add_widget(view_btn)
+        content.add_widget(self.view_btn)
         content.add_widget(search_btn)
         content.add_widget(dark_btn)
 
@@ -150,6 +150,7 @@ class HomeScreen(MDScreen):
         data = ref.get()
         count = len(data) if data else 0
         self.count_label.text = f"👨‍🎓 Total Students: {count}"
+        self.view_btn.text = f"📋  View Students  ({count})"
 
         if data:
             passed = sum(1 for s in data.values() if s.get('percentage', 0) >= 40)
