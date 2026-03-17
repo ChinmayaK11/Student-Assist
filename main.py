@@ -122,11 +122,20 @@ class HomeScreen(MDScreen):
             on_release=self.toggle_dark_mode
         )
 
+        about_btn = MDRaisedButton(
+            text="ℹ️  About",
+            pos_hint={"center_x": 0.5},
+            md_bg_color=(0.4, 0.4, 0.4, 1),
+            size_hint_x=0.8,
+            on_release=self.go_to_about
+        )
+
         content.add_widget(stats_card)
         content.add_widget(add_btn)
         content.add_widget(self.view_btn)
         content.add_widget(search_btn)
         content.add_widget(dark_btn)
+        content.add_widget(about_btn)
 
         layout.add_widget(toolbar)
         layout.add_widget(content)
@@ -174,6 +183,9 @@ class HomeScreen(MDScreen):
 
     def go_to_search(self, instance):
         self.manager.current = "search"
+
+    def go_to_about(self, instance):
+        self.manager.current = "about"
 
 
 # ---------------- ADD STUDENT SCREEN ----------------
@@ -583,6 +595,84 @@ class SearchStudentScreen(MDScreen):
         self.manager.current = "home"
 
 
+# ---------------- ABOUT SCREEN ----------------
+class AboutScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="ℹ️ About",
+            md_bg_color=(0.4, 0.4, 0.4, 1)
+        )
+
+        content = MDBoxLayout(orientation="vertical", padding=30, spacing=20)
+
+        card = MDCard(
+            orientation="vertical",
+            padding=24,
+            spacing=14,
+            size_hint_y=None,
+            height=380,
+            md_bg_color=(0.95, 0.97, 1, 1),
+            radius=[12]
+        )
+
+        card.add_widget(MDLabel(
+            text="🎓 StudentAssist",
+            halign="center",
+            font_style="H5",
+            theme_text_color="Custom",
+            text_color=(0.2, 0.4, 0.8, 1)
+        ))
+        card.add_widget(MDLabel(
+            text="Version 1.0.0",
+            halign="center",
+            font_style="Subtitle2"
+        ))
+        card.add_widget(MDLabel(
+            text="──────────────────────",
+            halign="center"
+        ))
+        card.add_widget(MDLabel(
+            text="A student record management app\nbuilt with KivyMD & Firebase.",
+            halign="center",
+            font_style="Body1"
+        ))
+        card.add_widget(MDLabel(
+            text="👨‍💻 Developed by\nChinmaya Kagolli",
+            halign="center",
+            font_style="Body1",
+            theme_text_color="Custom",
+            text_color=(0.2, 0.6, 0.4, 1)
+        ))
+        card.add_widget(MDLabel(
+            text="🛠 Built with\nPython • KivyMD • Firebase",
+            halign="center",
+            font_style="Caption"
+        ))
+
+        back_btn = MDRaisedButton(
+            text="⬅  Back to Home",
+            pos_hint={"center_x": 0.5},
+            md_bg_color=(0.2, 0.4, 0.8, 1),
+            size_hint_x=0.8,
+            on_release=self.go_back
+        )
+
+        content.add_widget(card)
+        content.add_widget(back_btn)
+
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
+
+        self.add_widget(layout)
+
+    def go_back(self, instance):
+        self.manager.current = "home"
+
+
 # ---------------- APP ----------------
 class StudentAssistApp(MDApp):
     def build(self):
@@ -593,6 +683,7 @@ class StudentAssistApp(MDApp):
         sm.add_widget(AddStudentScreen(name="add"))
         sm.add_widget(ViewStudentScreen(name="view"))
         sm.add_widget(SearchStudentScreen(name="search"))
+        sm.add_widget(AboutScreen(name="about"))
         return sm
 
 
