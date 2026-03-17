@@ -1,3 +1,5 @@
+import csv
+import os
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -8,6 +10,8 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.card import MDCard
 from kivymd.uix.toolbar import MDTopAppBar
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton
 
 from firebase_config import ref
 
@@ -204,11 +208,33 @@ class AddStudentScreen(MDScreen):
             on_release=self.go_back
         )
 
+        self.error_label = MDLabel(
+            text="",
+            halign="center",
+            font_style="Caption",
+            theme_text_color="Custom",
+            text_color=(0.9, 0.2, 0.2, 1),
+            size_hint_y=None,
+            height=30
+        )
+
+        self.success_label = MDLabel(
+            text="",
+            halign="center",
+            font_style="Caption",
+            theme_text_color="Custom",
+            text_color=(0.1, 0.7, 0.3, 1),
+            size_hint_y=None,
+            height=30
+        )
+
         content.add_widget(self.name_input)
         content.add_widget(self.roll_input)
         content.add_widget(self.m1_input)
         content.add_widget(self.m2_input)
         content.add_widget(self.m3_input)
+        content.add_widget(self.error_label)
+        content.add_widget(self.success_label)
         content.add_widget(submit_btn)
         content.add_widget(back_btn)
 
@@ -220,9 +246,34 @@ class AddStudentScreen(MDScreen):
     def submit(self, instance):
         name = self.name_input.text.strip()
         roll = self.roll_input.text.strip()
+        self.error_label.text = ""
+        self.success_label.text = ""
 
-        if not name or not roll:
-            print("Name and Roll number are required!")
+        # Highlight empty fields in red
+        self.name_input.line_color_focus = (0.9, 0.2, 0.2, 1) if not name else (0.2, 0.7, 0.4, 1)
+        self.roll_input.line_color_focus = (0.9, 0.2, 0.2, 1) if not roll else (0.2, 0.7, 0.4, 1)
+        self.m1_input.line_color_focus = (0.9, 0.2, 0.2, 1) if not self.m1_input.text else (0.2, 0.7, 0.4, 1)
+        self.m2_input.line_color_focus = (0.9, 0.2, 0.2, 1) if not self.m2_input.text else (0.2, 0.7, 0.4, 1)
+        self.m3_input.line_color_focus = (0.9, 0.2, 0.2, 1) if not self.m3_input.text else (0.2, 0.7, 0.4, 1)
+
+        # Validate name
+        if not name:
+            self.error_label.text = "⚠️ Student name cannot be empty!"
+            return
+
+        # Validate name — only letters and spaces
+        if not all(c.isalpha() or c.isspace() for c in name):
+            self.error_label.text = "⚠️ Name should contain only letters!"
+            return
+
+        # Validate roll
+        if not roll:
+            self.error_label.text = "⚠️ Roll number cannot be empty!"
+            return
+
+        # Validate marks
+        if not self.m1_input.text or not self.m2_input.text or not self.m3_input.text:
+            self.error_label.text = "⚠️ Please enter all 3 subject marks!"
             return
 
         try:
@@ -232,9 +283,16 @@ class AddStudentScreen(MDScreen):
                 int(self.m3_input.text)
             ]
         except ValueError:
-            print("Enter valid numeric marks")
+            self.error_label.text = "⚠️ Marks must be valid numbers!"
             return
 
+        # Validate marks range
+        if any(m < 0 or m > 100 for m in marks):
+            self.error_label.text = "⚠️ Marks must be between 0 and 100!"
+            return
+
+        # All good — clear errors
+        self.error_label.text = ""
         percentage = round((sum(marks) / 300) * 100, 2)
 
         ref.push({
@@ -244,7 +302,7 @@ class AddStudentScreen(MDScreen):
             "percentage": percentage
         })
 
-        print("Student saved to Firebase!")
+        self.success_label.text = f"✅ {name} saved successfully!"
 
         self.name_input.text = ""
         self.roll_input.text = ""
@@ -291,10 +349,17 @@ class ViewStudentScreen(MDScreen):
             on_release=self.toggle_sort
         )
 
+        export_btn = MDRaisedButton(
+            text="📤 Export CSV",
+            md_bg_color=(0.8, 0.4, 0.0, 1),
+            on_release=self.export_csv
+        )
+
         back_btn = MDFlatButton(text="⬅ Back", on_release=self.go_back)
 
         btn_row.add_widget(refresh_btn)
         btn_row.add_widget(self.sort_btn)
+        btn_row.add_widget(export_btn)
         btn_row.add_widget(back_btn)
 
         content.add_widget(self.scroll)
@@ -326,7 +391,17 @@ class ViewStudentScreen(MDScreen):
         reverse = self.sort_order == "high"
         sorted_students = sorted(data.items(), key=lambda x: x[1].get('percentage', 0), reverse=reverse)
 
-        for key, student in sorted_students:
+        for rank, (key, student) in enumerate(sorted(data.items(), key=lambda x: x[1].get('percentage', 0), reverse=True), start=1):
+            # Assign rank medal
+            if rank == 1:
+                medal = "🥇"
+            elif rank == 2:
+                medal = "🥈"
+            elif rank == 3:
+                medal = "🥉"
+            else:
+                medal = f"#{rank}"
+
             card = MDCard(
                 orientation="horizontal",
                 padding=12,
@@ -339,21 +414,67 @@ class ViewStudentScreen(MDScreen):
 
             status = "✅" if student['percentage'] >= 40 else "❌"
             grade = get_grade(student['percentage'])
-            text = f"{status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}"
+            text = f"{medal} {status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}"
             label = MDLabel(text=text, size_hint_x=0.8, font_style="Body2")
 
             delete_btn = MDRaisedButton(
                 text="🗑",
                 size_hint_x=0.2,
                 md_bg_color=(0.9, 0.2, 0.2, 1),
-                on_release=lambda inst, k=key: self.delete_student(k)
+                on_release=lambda inst, k=key, n=student['name']: self.confirm_delete(k, n)
             )
 
             card.add_widget(label)
             card.add_widget(delete_btn)
             self.list_layout.add_widget(card)
 
+    def export_csv(self, instance=None):
+        data = ref.get()
+
+        if not data:
+            print("No data to export!")
+            return
+
+        filepath = os.path.expanduser("~/Desktop/students_export.csv")
+
+        with open(filepath, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Name", "Roll", "Marks", "Percentage", "Grade", "Status"])
+            for _, student in data.items():
+                grade = get_grade(student.get('percentage', 0))
+                status = "Pass" if student.get('percentage', 0) >= 40 else "Fail"
+                writer.writerow([
+                    student.get('name', ''),
+                    student.get('roll', ''),
+                    str(student.get('marks', [])),
+                    student.get('percentage', ''),
+                    grade,
+                    status
+                ])
+
+        print(f"✅ Exported to {filepath}")
+
+    def confirm_delete(self, key, name):
+        self.dialog = MDDialog(
+            title="🗑 Delete Student?",
+            text=f"Are you sure you want to delete [b]{name}[/b]? This cannot be undone!",
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: self.dialog.dismiss()
+                ),
+                MDRaisedButton(
+                    text="DELETE",
+                    md_bg_color=(0.9, 0.2, 0.2, 1),
+                    on_release=lambda x: self.delete_student(key)
+                ),
+            ],
+        )
+        self.dialog.open()
+
     def delete_student(self, key):
+        if hasattr(self, 'dialog'):
+            self.dialog.dismiss()
         ref.child(key).delete()
         print(f"Student {key} deleted")
         self.load_data()
