@@ -577,6 +577,19 @@ class SearchStudentScreen(MDScreen):
 
         self.result_card.add_widget(self.result_label)
 
+        self.remarks_input = MDTextField(
+            hint_text="Add/update remarks for this student...",
+            icon_right="note-edit"
+        )
+
+        save_remarks_btn = MDRaisedButton(
+            text="💾 Save Remarks",
+            pos_hint={"center_x": 0.5},
+            md_bg_color=(0.6, 0.2, 0.8, 1),
+            size_hint_x=0.8,
+            on_release=self.save_remarks
+        )
+
         back_btn = MDFlatButton(
             text="⬅  Back",
             pos_hint={"center_x": 0.5},
@@ -586,12 +599,25 @@ class SearchStudentScreen(MDScreen):
         content.add_widget(self.search_input)
         content.add_widget(search_btn)
         content.add_widget(self.result_card)
+        content.add_widget(self.remarks_input)
+        content.add_widget(save_remarks_btn)
         content.add_widget(back_btn)
 
         layout.add_widget(toolbar)
         layout.add_widget(content)
 
         self.add_widget(layout)
+        self.current_key = None
+
+    def save_remarks(self, instance):
+        if not self.current_key:
+            return
+        remarks = self.remarks_input.text.strip()
+        if not remarks:
+            return
+        ref.child(self.current_key).update({"remarks": remarks})
+        self.remarks_input.text = ""
+        self.result_label.text += f"\n✅ Remarks saved: {remarks}"
 
     def search_student(self, instance):
         roll = self.search_input.text.strip()
@@ -635,8 +661,10 @@ class SearchStudentScreen(MDScreen):
                     f"🏅 Grade: {grade}\n"
                     f"Status: {status}\n"
                     f"📅 Attendance: {attend_str}\n"
+                    f"🗒️ Remarks: {student.get('remarks', 'No remarks added')}\n"
                     f"🕒 Added on: {added_on}"
                 )
+                self.current_key = key
                 found = True
                 break
 
