@@ -130,10 +130,19 @@ class HomeScreen(MDScreen):
             on_release=self.go_to_about
         )
 
+        attend_btn = MDRaisedButton(
+            text="📅  Attendance",
+            pos_hint={"center_x": 0.5},
+            md_bg_color=(0.8, 0.3, 0.1, 1),
+            size_hint_x=0.8,
+            on_release=self.go_to_attendance
+        )
+
         content.add_widget(stats_card)
         content.add_widget(add_btn)
         content.add_widget(self.view_btn)
         content.add_widget(search_btn)
+        content.add_widget(attend_btn)
         content.add_widget(dark_btn)
         content.add_widget(about_btn)
 
@@ -186,6 +195,9 @@ class HomeScreen(MDScreen):
 
     def go_to_about(self, instance):
         self.manager.current = "about"
+
+    def go_to_attendance(self, instance):
+        self.manager.current = "attendance"
 
 
 # ---------------- ADD STUDENT SCREEN ----------------
@@ -673,6 +685,145 @@ class AboutScreen(MDScreen):
         self.manager.current = "home"
 
 
+# ---------------- ATTENDANCE SCREEN ----------------
+class AttendanceScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.build_ui()
+
+    def build_ui(self):
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="📅 Attendance Tracker",
+            md_bg_color=(0.8, 0.3, 0.1, 1)
+        )
+
+        content = MDBoxLayout(orientation="vertical", padding=20, spacing=10)
+
+        self.date_label = MDLabel(
+            text=f"📆 Date: {__import__('datetime').date.today().strftime('%d %b %Y')}",
+            halign="center",
+            font_style="H6"
+        )
+
+        self.scroll = MDScrollView()
+        self.list_layout = MDBoxLayout(
+            orientation="vertical",
+            spacing=10,
+            size_hint_y=None
+        )
+        self.list_layout.bind(minimum_height=self.list_layout.setter("height"))
+        self.scroll.add_widget(self.list_layout)
+
+        btn_row = MDBoxLayout(orientation="horizontal", size_hint_y=None, height=50, spacing=10)
+
+        load_btn = MDRaisedButton(
+            text="🔄 Load Students",
+            md_bg_color=(0.8, 0.3, 0.1, 1),
+            on_release=self.load_students
+        )
+
+        save_btn = MDRaisedButton(
+            text="💾 Save",
+            md_bg_color=(0.2, 0.7, 0.4, 1),
+            on_release=self.save_attendance
+        )
+
+        back_btn = MDFlatButton(text="⬅ Back", on_release=self.go_back)
+
+        btn_row.add_widget(load_btn)
+        btn_row.add_widget(save_btn)
+        btn_row.add_widget(back_btn)
+
+        self.status_label = MDLabel(
+            text="",
+            halign="center",
+            font_style="Caption",
+            theme_text_color="Custom",
+            text_color=(0.2, 0.7, 0.4, 1),
+            size_hint_y=None,
+            height=30
+        )
+
+        content.add_widget(self.date_label)
+        content.add_widget(self.scroll)
+        content.add_widget(self.status_label)
+        content.add_widget(btn_row)
+
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
+
+        self.add_widget(layout)
+        self.attendance_map = {}
+
+    def load_students(self, instance=None):
+        self.list_layout.clear_widgets()
+        self.attendance_map = {}
+        data = ref.get()
+
+        if not data:
+            self.list_layout.add_widget(MDLabel(text="No students found", halign="center"))
+            return
+
+        for key, student in data.items():
+            self.attendance_map[key] = "Present"
+
+            row = MDCard(
+                orientation="horizontal",
+                padding=12,
+                spacing=10,
+                size_hint_y=None,
+                height=55,
+                md_bg_color=(0.95, 0.97, 1, 1),
+                radius=[8]
+            )
+
+            label = MDLabel(
+                text=f"👤 {student['name']}  |  Roll: {student['roll']}",
+                size_hint_x=0.65,
+                font_style="Body2"
+            )
+
+            toggle_btn = MDRaisedButton(
+                text="✅ Present",
+                size_hint_x=0.35,
+                md_bg_color=(0.2, 0.7, 0.4, 1),
+                on_release=lambda inst, k=key: self.toggle_attendance(inst, k)
+            )
+
+            row.add_widget(label)
+            row.add_widget(toggle_btn)
+            self.list_layout.add_widget(row)
+
+    def toggle_attendance(self, btn, key):
+        if self.attendance_map[key] == "Present":
+            self.attendance_map[key] = "Absent"
+            btn.text = "❌ Absent"
+            btn.md_bg_color = (0.9, 0.2, 0.2, 1)
+        else:
+            self.attendance_map[key] = "Present"
+            btn.text = "✅ Present"
+            btn.md_bg_color = (0.2, 0.7, 0.4, 1)
+
+    def save_attendance(self, instance=None):
+        if not self.attendance_map:
+            self.status_label.text = "⚠️ Load students first!"
+            return
+
+        today = __import__('datetime').date.today().strftime('%Y-%m-%d')
+        present = sum(1 for v in self.attendance_map.values() if v == "Present")
+        total = len(self.attendance_map)
+
+        for key, status in self.attendance_map.items():
+            ref.child(key).child("attendance").child(today).set(status)
+
+        self.status_label.text = f"✅ Saved! Present: {present}/{total}"
+
+    def go_back(self, instance):
+        self.manager.current = "home"
+
+
 # ---------------- APP ----------------
 class StudentAssistApp(MDApp):
     def build(self):
@@ -684,6 +835,7 @@ class StudentAssistApp(MDApp):
         sm.add_widget(ViewStudentScreen(name="view"))
         sm.add_widget(SearchStudentScreen(name="search"))
         sm.add_widget(AboutScreen(name="about"))
+        sm.add_widget(AttendanceScreen(name="attendance"))
         return sm
 
 
