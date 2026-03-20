@@ -774,6 +774,14 @@ class AttendanceScreen(MDScreen):
 
         btn_row.add_widget(load_btn)
         btn_row.add_widget(save_btn)
+
+        history_btn = MDRaisedButton(
+            text="📜 History",
+            md_bg_color=(0.3, 0.3, 0.7, 1),
+            on_release=self.go_to_history
+        )
+
+        btn_row.add_widget(history_btn)
         btn_row.add_widget(back_btn)
 
         self.status_label = MDLabel(
@@ -863,8 +871,119 @@ class AttendanceScreen(MDScreen):
     def go_back(self, instance):
         self.manager.current = "home"
 
+    def go_to_history(self, instance):
+        self.manager.current = "attendance_history"
 
-# ---------------- APP ----------------
+
+# ---------------- ATTENDANCE HISTORY SCREEN ----------------
+class AttendanceHistoryScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.build_ui()
+
+    def build_ui(self):
+        layout = MDBoxLayout(orientation="vertical", spacing=0)
+
+        toolbar = MDTopAppBar(
+            title="📜 Attendance History",
+            md_bg_color=(0.3, 0.3, 0.7, 1)
+        )
+
+        content = MDBoxLayout(orientation="vertical", padding=20, spacing=10)
+
+        self.scroll = MDScrollView()
+        self.list_layout = MDBoxLayout(
+            orientation="vertical",
+            spacing=10,
+            size_hint_y=None
+        )
+        self.list_layout.bind(minimum_height=self.list_layout.setter("height"))
+        self.scroll.add_widget(self.list_layout)
+
+        btn_row = MDBoxLayout(orientation="horizontal", size_hint_y=None, height=50, spacing=10)
+
+        refresh_btn = MDRaisedButton(
+            text="🔄 Load",
+            md_bg_color=(0.3, 0.3, 0.7, 1),
+            on_release=self.load_history
+        )
+
+        back_btn = MDFlatButton(text="⬅ Back", on_release=self.go_back)
+
+        btn_row.add_widget(refresh_btn)
+        btn_row.add_widget(back_btn)
+
+        content.add_widget(self.scroll)
+        content.add_widget(btn_row)
+
+        layout.add_widget(toolbar)
+        layout.add_widget(content)
+
+        self.add_widget(layout)
+
+    def on_enter(self):
+        self.load_history()
+
+    def load_history(self, instance=None):
+        self.list_layout.clear_widgets()
+        data = ref.get()
+
+        if not data:
+            self.list_layout.add_widget(MDLabel(text="No students found", halign="center"))
+            return
+
+        for key, student in data.items():
+            attendance = student.get('attendance', {})
+
+            # Header card per student
+            header = MDCard(
+                orientation="vertical",
+                padding=12,
+                spacing=6,
+                size_hint_y=None,
+                md_bg_color=(0.85, 0.90, 1.0, 1),
+                radius=[8]
+            )
+
+            if attendance:
+                total_days = len(attendance)
+                present_days = sum(1 for v in attendance.values() if v == "Present")
+                attend_pct = round((present_days / total_days) * 100, 1)
+                warn = " ⚠️ LOW" if attend_pct < 75 else ""
+                summary = f"{student['name']} | Roll: {student['roll']} | {present_days}/{total_days} days ({attend_pct}%){warn}"
+                header.height = 40 + (len(attendance) * 28)
+
+                header.add_widget(MDLabel(
+                    text=summary,
+                    halign="left",
+                    font_style="Body2",
+                    size_hint_y=None,
+                    height=36
+                ))
+
+                for date, status in sorted(attendance.items()):
+                    icon = "✅" if status == "Present" else "❌"
+                    header.add_widget(MDLabel(
+                        text=f"   {icon} {date} — {status}",
+                        halign="left",
+                        font_style="Caption",
+                        size_hint_y=None,
+                        height=26
+                    ))
+            else:
+                header.height = 40
+                header.add_widget(MDLabel(
+                    text=f"{student['name']} | Roll: {student['roll']} — No attendance recorded",
+                    halign="left",
+                    font_style="Body2",
+                    size_hint_y=None,
+                    height=36
+                ))
+
+            self.list_layout.add_widget(header)
+
+    def go_back(self, instance):
+        self.manager.current = "attendance"
 class StudentAssistApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "Blue"
@@ -876,6 +995,7 @@ class StudentAssistApp(MDApp):
         sm.add_widget(SearchStudentScreen(name="search"))
         sm.add_widget(AboutScreen(name="about"))
         sm.add_widget(AttendanceScreen(name="attendance"))
+        sm.add_widget(AttendanceHistoryScreen(name="attendance_history"))
         return sm
 
 
