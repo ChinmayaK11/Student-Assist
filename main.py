@@ -447,9 +447,26 @@ class ViewStudentScreen(MDScreen):
                 total_days = len(attendance)
                 present_days = sum(1 for v in attendance.values() if v == "Present")
                 attend_pct = round((present_days / total_days) * 100, 1)
-                attend_str = f"📅{attend_pct}%"
+                if attend_pct < 75:
+                    attend_str = f"⚠️ {attend_pct}% LOW"
+                    card_color = (1.0, 0.95, 0.90, 1)  # light orange warning
+                else:
+                    attend_str = f"📅 {attend_pct}%"
+                    card_color = (0.95, 0.97, 1, 1)
             else:
                 attend_str = "📅 N/A"
+                card_color = (0.95, 0.97, 1, 1)
+
+            card = MDCard(
+                orientation="horizontal",
+                padding=12,
+                spacing=10,
+                size_hint_y=None,
+                height=60,
+                md_bg_color=card_color,
+                radius=[8]
+            )
+
             text = f"{medal} {status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}  |  {attend_str}"
             label = MDLabel(text=text, size_hint_x=0.8, font_style="Body2")
 
@@ -603,7 +620,10 @@ class SearchStudentScreen(MDScreen):
                     total_days = len(attendance)
                     present_days = sum(1 for v in attendance.values() if v == "Present")
                     attend_pct = round((present_days / total_days) * 100, 1)
-                    attend_str = f"{present_days}/{total_days} days ({attend_pct}%)"
+                    if attend_pct < 75:
+                        attend_str = f"⚠️ {present_days}/{total_days} days ({attend_pct}%) — LOW ATTENDANCE!"
+                    else:
+                        attend_str = f"{present_days}/{total_days} days ({attend_pct}%)"
                 else:
                     attend_str = "No attendance recorded"
 
