@@ -442,7 +442,15 @@ class ViewStudentScreen(MDScreen):
 
             status = "✅" if student['percentage'] >= 40 else "❌"
             grade = get_grade(student['percentage'])
-            text = f"{medal} {status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}"
+            attendance = student.get('attendance', {})
+            if attendance:
+                total_days = len(attendance)
+                present_days = sum(1 for v in attendance.values() if v == "Present")
+                attend_pct = round((present_days / total_days) * 100, 1)
+                attend_str = f"📅{attend_pct}%"
+            else:
+                attend_str = "📅 N/A"
+            text = f"{medal} {status} {student['name']}  |  Roll: {student['roll']}  |  {student['percentage']}%  |  Grade: {grade}  |  {attend_str}"
             label = MDLabel(text=text, size_hint_x=0.8, font_style="Body2")
 
             delete_btn = MDRaisedButton(
@@ -588,6 +596,17 @@ class SearchStudentScreen(MDScreen):
                 status = "✅ Pass" if student['percentage'] >= 40 else "❌ Fail"
                 grade = get_grade(student['percentage'])
                 added_on = student.get('added_on', 'N/A')
+
+                # Calculate attendance percentage
+                attendance = student.get('attendance', {})
+                if attendance:
+                    total_days = len(attendance)
+                    present_days = sum(1 for v in attendance.values() if v == "Present")
+                    attend_pct = round((present_days / total_days) * 100, 1)
+                    attend_str = f"{present_days}/{total_days} days ({attend_pct}%)"
+                else:
+                    attend_str = "No attendance recorded"
+
                 self.result_label.text = (
                     f"👤 Name: {student['name']}\n"
                     f"🔢 Roll: {student['roll']}\n"
@@ -595,6 +614,7 @@ class SearchStudentScreen(MDScreen):
                     f"📊 Percentage: {student['percentage']}%\n"
                     f"🏅 Grade: {grade}\n"
                     f"Status: {status}\n"
+                    f"📅 Attendance: {attend_str}\n"
                     f"🕒 Added on: {added_on}"
                 )
                 found = True
