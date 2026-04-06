@@ -17,7 +17,6 @@ from kivymd.uix.button import MDFlatButton
 from firebase_config import ref
 
 
-# ---------------- GRADE HELPER ----------------
 def get_grade(percentage):
     if percentage >= 90:
         return "A+"
@@ -32,8 +31,6 @@ def get_grade(percentage):
     else:
         return "F"
 
-
-# ---------------- ATTENDANCE HELPER ----------------
 def _calc_attendance(student):
     """Returns (present_days, total_days, attend_pct) for a student dict.
     Returns (0, 0, 0.0) if no attendance data exists.
@@ -47,7 +44,6 @@ def _calc_attendance(student):
     return present_days, total_days, attend_pct
 
 
-# ---------------- HOME SCREEN ----------------
 class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
