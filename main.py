@@ -210,7 +210,6 @@ class HomeScreen(MDScreen):
         self.manager.current = "attendance"
 
 
-# ---------------- ADD STUDENT SCREEN ----------------
 class AddStudentScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
