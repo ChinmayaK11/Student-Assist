@@ -33,6 +33,20 @@ def get_grade(percentage):
         return "F"
 
 
+# ---------------- ATTENDANCE HELPER ----------------
+def _calc_attendance(student):
+    """Returns (present_days, total_days, attend_pct) for a student dict.
+    Returns (0, 0, 0.0) if no attendance data exists.
+    """
+    attendance = student.get('attendance', {})
+    if not attendance:
+        return 0, 0, 0.0
+    total_days   = len(attendance)
+    present_days = sum(1 for v in attendance.values() if v == "Present")
+    attend_pct   = round((present_days / total_days) * 100, 1)
+    return present_days, total_days, attend_pct
+
+
 # ---------------- HOME SCREEN ----------------
 class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
@@ -430,26 +444,15 @@ class ViewStudentScreen(MDScreen):
             else:
                 medal = f"#{rank}"
 
-            card = MDCard(
-                orientation="horizontal",
-                padding=12,
-                spacing=10,
-                size_hint_y=None,
-                height=60,
-                md_bg_color=(0.95, 0.97, 1, 1),
-                radius=[8]
-            )
-
             status = "✅" if student['percentage'] >= 40 else "❌"
             grade = get_grade(student['percentage'])
-            attendance = student.get('attendance', {})
-            if attendance:
-                total_days = len(attendance)
-                present_days = sum(1 for v in attendance.values() if v == "Present")
-                attend_pct = round((present_days / total_days) * 100, 1)
+
+            # use shared helper — fixes duplicate MDCard creation that was here before
+            present_days, total_days, attend_pct = _calc_attendance(student)
+            if total_days > 0:
                 if attend_pct < 75:
                     attend_str = f"⚠️ {attend_pct}% LOW"
-                    card_color = (1.0, 0.95, 0.90, 1)  # light orange warning
+                    card_color = (1.0, 0.95, 0.90, 1)
                 else:
                     attend_str = f"📅 {attend_pct}%"
                     card_color = (0.95, 0.97, 1, 1)
@@ -640,12 +643,9 @@ class SearchStudentScreen(MDScreen):
                 grade = get_grade(student['percentage'])
                 added_on = student.get('added_on', 'N/A')
 
-                # Calculate attendance percentage
-                attendance = student.get('attendance', {})
-                if attendance:
-                    total_days = len(attendance)
-                    present_days = sum(1 for v in attendance.values() if v == "Present")
-                    attend_pct = round((present_days / total_days) * 100, 1)
+                # Calculate attendance percentage using shared helper
+                present_days, total_days, attend_pct = _calc_attendance(student)
+                if total_days > 0:
                     if attend_pct < 75:
                         attend_str = f"⚠️ {present_days}/{total_days} days ({attend_pct}%) — LOW ATTENDANCE!"
                     else:
@@ -974,9 +974,7 @@ class AttendanceHistoryScreen(MDScreen):
             )
 
             if attendance:
-                total_days = len(attendance)
-                present_days = sum(1 for v in attendance.values() if v == "Present")
-                attend_pct = round((present_days / total_days) * 100, 1)
+                present_days, total_days, attend_pct = _calc_attendance(student)
                 warn = " ⚠️ LOW" if attend_pct < 75 else ""
                 summary = f"{student['name']} | Roll: {student['roll']} | {present_days}/{total_days} days ({attend_pct}%){warn}"
                 header.height = 40 + (len(attendance) * 28)
