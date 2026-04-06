@@ -318,12 +318,12 @@ class AddStudentScreen(MDScreen):
                 int(self.m3_input.text)
             ]
         except ValueError:
-            self.error_label.text = "⚠️ Marks must be valid numbers!"
+            self.error_label.text = "Marks must be valid numbers!"
             return
 
         # Validate marks range
         if any(m < 0 or m > 100 for m in marks):
-            self.error_label.text = "⚠️ Marks must be between 0 and 100!"
+            self.error_label.text = "Marks must be between 0 and 100!"
             return
 
         # All good — clear errors
