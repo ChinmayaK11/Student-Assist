@@ -298,17 +298,17 @@ class AddStudentScreen(MDScreen):
 
         # Validate name — only letters and spaces
         if not all(c.isalpha() or c.isspace() for c in name):
-            self.error_label.text = "⚠️ Name should contain only letters!"
+            self.error_label.text = " Name should contain only letters!"
             return
 
         # Validate roll
         if not roll:
-            self.error_label.text = "⚠️ Roll number cannot be empty!"
+            self.error_label.text = " Roll number cannot be empty!"
             return
 
         # Validate marks
         if not self.m1_input.text or not self.m2_input.text or not self.m3_input.text:
-            self.error_label.text = "⚠️ Please enter all 3 subject marks!"
+            self.error_label.text = "Please enter all 3 subject marks!"
             return
 
         try:
