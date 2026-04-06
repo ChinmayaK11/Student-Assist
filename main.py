@@ -361,7 +361,7 @@ class ViewStudentScreen(MDScreen):
         main_layout = MDBoxLayout(orientation="vertical", spacing=0)
 
         toolbar = MDTopAppBar(
-            title="📋 Student Records",
+            title=" Student Records",
             md_bg_color=(0.2, 0.4, 0.8, 1)
         )
 
