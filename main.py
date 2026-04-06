@@ -293,7 +293,7 @@ class AddStudentScreen(MDScreen):
 
         # Validate name
         if not name:
-            self.error_label.text = "⚠️ Student name cannot be empty!"
+            self.error_label.text = "Student name cannot be empty!"
             return
 
         # Validate name — only letters and spaces
